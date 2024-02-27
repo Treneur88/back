@@ -109,19 +109,6 @@ app.get("/checkUsername/:username", (req, res) => {
 });// or wherever you want your files to go
 
 
-// Move the declaration of 'upload' to the top of the file as a global variable
-const upload = multer({ dest: 'uploads/' });
-
-// Set up multer storage and upload configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads');
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname);
-    }
-});
-
 // Rest of the code...
 
 const uploadToB2Bucket = async (filePath, bucketName, fileName) => {
@@ -156,7 +143,7 @@ const uploadToB2Bucket = async (filePath, bucketName, fileName) => {
         const uploadResponse1 = await axios.post(uploadUrl, fileStream, { headers });
 
         console.log('File uploaded successfully');
-        console.log("http://localhost:8800/images/" + fileName);
+        console.log("https://back-1-7wvo.onrender.com/uploads//images/" + fileName);
 
         // Get the file ID from the upload response
         const fileId = uploadResponse1.data.fileId;
@@ -173,6 +160,8 @@ const uploadToB2Bucket = async (filePath, bucketName, fileName) => {
     }
 };
 
+const upload = multer({ storage: multer.memoryStorage() });
+
 app.post("/uploads", upload.single('file'), async (req, res) => {
     if (!req.file) {
         console.log("No file received");
@@ -181,27 +170,20 @@ app.post("/uploads", upload.single('file'), async (req, res) => {
         });
     } else {
         console.log('File received successfully');
-        const fileData = req.file;
+        const fileData = req.file.buffer; // Access file as buffer
         const fileName = req.body.name;
-        const filePath = `public/uploads/${fileName}`;
 
-        fs.rename(fileData.path, filePath, async (err) => {
-            if (err) {
-                console.error('Error moving file:', err);
-                res.status(500).send('Error moving file');
-            } else {
-                const bucketName = 'PictoTest';
-                console.log("https://f004.backblazeb2.com/file/PictoTest/" + fileName);
+        // Now fileData is a Buffer, you can directly upload it to B2
+        const bucketName = 'PictoTest';
+        console.log("https://f004.backblazeb2.com/file/PictoTest/" + fileName);
 
-                try {
-                    const downloadUrl = await uploadToB2Bucket(filePath, bucketName, fileName);
-                    res.status(200).send(downloadUrl); // Send download URL in response
-                } catch (error) {
-                    console.error('Error uploading file:', error);
-                    res.status(500).send('Error uploading file');
-                }
-            }
-        });
+        try {
+            const downloadUrl = await uploadToB2Bucket(fileData, bucketName, fileName);
+            res.status(200).send(downloadUrl); // Send download URL in response
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            res.status(500).send('Error uploading file');
+        }
     }
 });
 
