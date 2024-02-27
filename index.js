@@ -111,19 +111,17 @@ app.get("/checkUsername/:username", (req, res) => {
 
 // Rest of the code...
 
-const uploadToB2Bucket = async (filePath, bucketName, fileName) => {
+const uploadToB2Bucket = async (fileBuffer, bucketName, fileName) => {
     const b2 = new B2({
         applicationKeyId: '004f75c63a9de360000000005',
         applicationKey: 'K004s6ZzuDt4tyZ0b1bwL7rMNqT5tv0',
     });
-    const calculateSha1 = (filePath) => {
-        const fileData = fs.readFileSync(filePath);
+
+    const calculateSha1 = (buffer) => {
         const sha1 = crypto.createHash('sha1');
-        sha1.update(fileData);
+        sha1.update(buffer);
         return sha1.digest('hex');
     };
-
-    const fileStream = fs.createReadStream(filePath);
 
     try {
         const response = await b2.authorize();
@@ -136,11 +134,11 @@ const uploadToB2Bucket = async (filePath, bucketName, fileName) => {
             Authorization: uploadAuthToken,
             'Content-Type': 'b2/x-auto',
             'X-Bz-File-Name': encodeURIComponent(fileName),
-            'X-Bz-Content-Sha1': calculateSha1(filePath),
-            'Content-Length': fs.statSync(filePath).size
+            'X-Bz-Content-Sha1': calculateSha1(fileBuffer),
+            'Content-Length': fileBuffer.length
         };
 
-        const uploadResponse1 = await axios.post(uploadUrl, fileStream, { headers });
+        const uploadResponse1 = await axios.post(uploadUrl, fileBuffer, { headers });
 
         console.log('File uploaded successfully');
         console.log("https://back-1-7wvo.onrender.com/uploads//images/" + fileName);
@@ -186,7 +184,6 @@ app.post("/uploads", upload.single('file'), async (req, res) => {
         }
     }
 });
-
 
 app.get('/images/:imageName', async (req, res) => {
     const { imageName } = req.params;
