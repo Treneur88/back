@@ -19,10 +19,10 @@ import axios from 'axios';
 import { PassThrough } from 'stream';
 import getStream from 'get-stream';
 const mydb = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "Adityag@088",
-    database: "symbol"
+    host: "sql6.freemysqlhosting.net",
+    user: "sql6687227",
+    password: "FxH6W1zje5",
+    database: "sql6687227"
 });
 
 app.use(cors());
@@ -37,7 +37,8 @@ mydb.connect((err) => {
 
 app.listen(8800, () => {
     console.log("Server is running on port 8800");
-});
+})
+
 
 const createTableQuery = `CREATE TABLE IF NOT EXISTS user (
     id INT AUTO_INCREMENT PRIMARY KEY,
