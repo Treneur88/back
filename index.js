@@ -283,8 +283,7 @@ async function addAnimatedBorder(imagePath, color1, color2) {
 
     return gifBuffer;
 }
-
-app.post("/animated", upload.single('file'), (req, res) => {
+app.post("/animated", upload.single('file'), async (req, res) => {
     if (!req.file) {
         console.log("No file received");
         return res.send({
@@ -292,39 +291,30 @@ app.post("/animated", upload.single('file'), (req, res) => {
         });
     } else {
         console.log('file received successfully');
-        const fileData = req.file;
+        const fileBuffer = req.file.buffer;
         const fileName = req.body.name; // Assuming the file name is sent in the request body
-        console.log(fileName)
-        const filePath = `public/uploads/${fileName}`;
         const color1 = req.body.color1; // Assuming color1 is sent in the request body
         const color2 = req.body.color2; // Assuming color2 is sent in the request body
 
-        fs.rename(fileData.path, filePath, async (err) => {
-            if (err) {
-                console.error('Error moving file:', err);
-                res.status(500).send('Error moving file');
-            } else {
-                try {
-                    // Add animated border and create GIF
-                    const gifBuffer = await addAnimatedBorder(filePath, color1, color2);
+        try {
+            // Add animated border and create GIF
+            const gifBuffer = await addAnimatedBorder(fileBuffer, color1, color2);
 
-                    // Save the GIF to a file
-                    const gifFileName = `${fileName}.gif`;
-                    console.log(gifFileName);
-                    const gifFilePath = `public/uploads/${gifFileName}`;
-                    fs.writeFileSync(gifFilePath, gifBuffer);
+            // Save the GIF to a file
+            const gifFileName = `${fileName}.gif`;
+            console.log(gifFileName);
+            const gifFilePath = `public/uploads/${gifFileName}`;
+            fs.writeFileSync(gifFilePath, gifBuffer);
 
-                    // Upload the GIF to B2 bucket
-                    const bucketName = 'PictoTest';
-                    await uploadToB2Bucket(gifFilePath, bucketName, gifFileName);
+            // Upload the GIF to B2 bucket
+            const bucketName = 'PictoTest';
+            await uploadToB2Bucket(gifFilePath, bucketName, gifFileName);
 
-                    res.status(200).json({ message: 'Animated border added, GIF created and uploaded successfully.' });
-                } catch (error) {
-                    console.error('Error processing file:', error);
-                    res.status(500).send('Error processing file');
-                }
-            }
-        });
+            res.status(200).json({ message: 'Animated border added, GIF created and uploaded successfully.' });
+        } catch (error) {
+            console.error('Error processing file:', error);
+            res.status(500).send('Error processing file');
+        }
     }
 });
 
