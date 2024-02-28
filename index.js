@@ -224,10 +224,10 @@ const createDirectory = (directoryPath) => {
     });
 };
 
-async function addAnimatedBorder(imagePath, color1, color2) {
+async function addAnimatedBorder(imageBuffer, color1, color2) {
     // Load the image
-    const image = await loadImage(imagePath);
-    console.log(imagePath);
+    const image = await loadImage(imageBuffer);
+    console.log('Image loaded');
 
     // Create canvas to draw animated border
     const canvas = createCanvas(image.width, image.height);
@@ -283,6 +283,7 @@ async function addAnimatedBorder(imagePath, color1, color2) {
 
     return gifBuffer;
 }
+
 app.post("/animated", upload.single('file'), async (req, res) => {
     if (!req.file) {
         console.log("No file received");
@@ -300,15 +301,10 @@ app.post("/animated", upload.single('file'), async (req, res) => {
             // Add animated border and create GIF
             const gifBuffer = await addAnimatedBorder(fileBuffer, color1, color2);
 
-            // Save the GIF to a file
-            const gifFileName = `${fileName}.gif`;
-            console.log(gifFileName);
-            const gifFilePath = `public/uploads/${gifFileName}`;
-            fs.writeFileSync(gifFilePath, gifBuffer);
-
             // Upload the GIF to B2 bucket
             const bucketName = 'PictoTest';
-            await uploadToB2Bucket(gifFilePath, bucketName, gifFileName);
+            const gifFileName = `${fileName}.gif`;
+            await uploadToB2Bucket(gifBuffer, bucketName, gifFileName);
 
             res.status(200).json({ message: 'Animated border added, GIF created and uploaded successfully.' });
         } catch (error) {
