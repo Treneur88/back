@@ -18,6 +18,7 @@ import sharp from 'sharp';
 import axios from 'axios';
 import { PassThrough } from 'stream';
 import getStream from 'get-stream';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 const mydb = mysql.createConnection({
     host: "sql6.freemysqlhosting.net",
     user: "sql6687227",
@@ -193,6 +194,7 @@ app.post("/uploads", upload.single('file'), async (req, res) => {
     }
 });
 
+/*
 app.get('/images/:imageName', async (req, res) => {
     const { imageName } = req.params;
     const imageUrl = 'https://f004.backblazeb2.com/file/PictoTest/';
@@ -213,7 +215,12 @@ app.get('/images/:imageName', async (req, res) => {
         res.status(500).send('Error fetching image');
     }
 });
+*/
 
+app.use('/images', createProxyMiddleware({ 
+    target: 'https://back-1-7wvo.onrender.com', 
+    changeOrigin: true 
+  }));
 
 
 
