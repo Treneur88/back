@@ -162,6 +162,19 @@ const uploadToB2Bucket = async (fileBuffer, bucketName, fileName) => {
     }
 };
 
+app.get("/num", (req, res) => {
+    const countEntriesQuery = "SELECT COUNT(*) AS count FROM images";
+    mydb.query(countEntriesQuery, (err, result) => {
+        if (err) {
+            console.log(err);
+            res.status(500).send("Error counting entries");
+        } else {
+            const count = result[0].count;
+            res.send(count.toString());
+        }
+    });
+});
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post("/uploads", upload.single('file'), async (req, res) => {
